@@ -1,11 +1,13 @@
 {
   "name": "@alexeimyshkouski/realtime-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Realtime Server",
   "main": "index.js",
   "author": "Alexei Myshkouski",
   "dependencies": {
-    "debug": "^4.0.1"
+    "@alexeimyshkouski/ws": "^6.1.0-beta.1",
+    "debug": "^4.0.1",
+    "koa-compose": "^4.1.0"
   },
   "repository": {
     "type": "git",
