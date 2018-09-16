@@ -1,0 +1,14 @@
+{
+  "name": "@alexeimyshkouski/realtime-server",
+  "version": "0.0.1",
+  "description": "Realtime Server",
+  "main": "index.js",
+  "author": "Alexei Myshkouski",
+  "dependencies": {
+    "debug": "^4.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Myshkouski/realtime-server.git"
+  }
+}
