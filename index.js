@@ -4,7 +4,7 @@ const http = require('http')
 
 const createContext = require('./createContext')
 
-const debug = require('debug')('ws-server')
+const debug = require('debug')('realtime:server')
 
 const DEFAULT_UPGRADE_STATUS_CODE = 101
 const DEFAULT_WS_CLOSE_CODE = 1008
