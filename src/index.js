@@ -1,43 +1,42 @@
-const compose = require('koa-compose')
-const WebSocket = require('@alexeimyshkouski/ws')
-const http = require('http')
+import compose from 'koa-compose'
+import ws from '@alexeimyshkouski/ws'
 
-const createContext = require('./createContext')
+import { ClientContext, UpgradeContext } from './context/index'
 
 const debug = require('debug')('realtime:server')
 
 const DEFAULT_UPGRADE_STATUS_CODE = 101
 const DEFAULT_WS_CLOSE_CODE = 1008
 
-const DEFAULT_OPTIONS = {
-    perMessageDeflate: {
-        zlibDeflateOptions: {
-            chunkSize: 1024,
-            memLevel: 7,
-            level: 3,
-        },
-        zlibInflateOptions: {
-            chunkSize: 10 * 1024
-        },
+// const DEFAULT_OPTIONS = {
+//     perMessageDeflate: {
+//         zlibDeflateOptions: {
+//             chunkSize: 1024,
+//             memLevel: 7,
+//             level: 3,
+//         },
+//         zlibInflateOptions: {
+//             chunkSize: 10 * 1024
+//         },
 
-        // Other options settable:
-        // Defaults to negotiated value.
-        clientNoContextTakeover: true,
-        // Defaults to negotiated value.
-        serverNoContextTakeover: true,
-        // Defaults to negotiated value.
-        clientMaxWindowBits: 10,
-        // Defaults to negotiated value.
-        serverMaxWindowBits: 10,
+//         // Other options settable:
+//         // Defaults to negotiated value.
+//         clientNoContextTakeover: true,
+//         // Defaults to negotiated value.
+//         serverNoContextTakeover: true,
+//         // Defaults to negotiated value.
+//         clientMaxWindowBits: 10,
+//         // Defaults to negotiated value.
+//         serverMaxWindowBits: 10,
 
-        // Below options specified as default values.
-        // Limits zlib concurrency for perf.
-        concurrencyLimit: 10,
-        // Size (in bytes) below which messages
-        // should not be compressed.
-        threshold: 1024,
-    }
-}
+//         // Below options specified as default values.
+//         // Limits zlib concurrency for perf.
+//         concurrencyLimit: 10,
+//         // Size (in bytes) below which messages
+//         // should not be compressed.
+//         threshold: 1024,
+//     }
+// }
 
 const FORCED_OPTIONS = {
     noServer: true
@@ -61,10 +60,10 @@ function serialize(message) {
     throw new TypeError('Cannot stringify message of type "' + typeOfMessage + '"')
 }
 
-async function _handleUpgrade(req, socket, head, extensions, headers) {
-    const ctx = createContext({
+async function _handleUpgrade(request, socket, head, extensions, headers) {
+    const ctx = new UpgradeContext({
         app: this,
-        req,
+        request,
         socket,
         head,
         extensions,
@@ -77,13 +76,13 @@ async function _handleUpgrade(req, socket, head, extensions, headers) {
         this.emit('error', error)
     }
 
-    this.completeUpgrade(req, socket, head, extensions, headers)
+    this.completeUpgrade(request, socket, head, extensions, headers)
 
     return ctx
 }
 
 async function _handleMessage(websocket, req, socket, head, extensions, headers, message) {
-    const ctx = createContext({
+    const ctx = new ClientContext({
         app: this,
         message,
         websocket,
@@ -121,25 +120,36 @@ async function _handleMessage(websocket, req, socket, head, extensions, headers,
 
 function _handleError(websocket, error) {
     websocket.terminate()
-    // this.emit('error', error)
+    this.emit('error', error)
 }
 
-class WebsocketServer extends WebSocket.Server {
+// @use('message')
+// @use('broadcast')
+// @use('upgrade')
+class WebsocketServer extends ws.Server {
+    // protected _upgradeMiddleware: Middleware[]
+    // protected _composedUpgradeMiddleware: Function
+
+    // protected _messageMiddleware: Middleware[]
+    // protected _composedMessageMiddleware: Function
+
+    // protected _broadcastMiddleware: Middleware[]
+    // protected _composedBroadcastMiddleware: Function
+    
     constructor(options = {}) {
-        super(Object.assign({}, DEFAULT_OPTIONS, options, FORCED_OPTIONS))
+        super(Object.assign({}, options, FORCED_OPTIONS))
 
-        const upgradeMiddleware = []
-        this._upgradeMiddleware = upgradeMiddleware
-        this._composedUpgradeMiddleware = compose(upgradeMiddleware)
-        this._isUpgradeMiddlewareUsed = false
+        // const upgradeMiddleware: Middleware[] = []
+        // this._upgradeMiddleware = upgradeMiddleware
+        // this._composedUpgradeMiddleware = compose(upgradeMiddleware)
 
-        const messageMiddleware = []
-        this._messageMiddleware = messageMiddleware
-        this._composedMessageMiddleware = compose(messageMiddleware)
+        // const messageMiddleware: Middleware[] = []
+        // this._messageMiddleware = messageMiddleware
+        // this._composedMessageMiddleware = compose(messageMiddleware)
 
-        const broadcastMiddleware = []
-        this._broadcastMiddleware = broadcastMiddleware
-        this._composedBroadcastMiddleware = compose(broadcastMiddleware)
+        // const broadcastMiddleware = []
+        // this._broadcastMiddleware = broadcastMiddleware
+        // this._composedBroadcastMiddleware = compose(broadcastMiddleware)
 
         this
             .on('upgrade', _handleUpgrade.bind(this))
@@ -151,7 +161,7 @@ class WebsocketServer extends WebSocket.Server {
     }
 
     upgrade(fn) {
-        if (this._isUpgradeMiddlewareUsed) {
+        if (this._upgradeMiddleware.length) {
             throw new Error('Upgrade middleware should be used before message middlewares')
         }
 
@@ -165,8 +175,6 @@ class WebsocketServer extends WebSocket.Server {
     }
 
     message(fn) {
-        this._isUpgradeMiddlewareUsed = true
-
         const _messageMiddleware = this._messageMiddleware
         _messageMiddleware.push(fn.bind(this))
         this._composedMessageMiddleware = compose(_messageMiddleware)
@@ -187,7 +195,7 @@ class WebsocketServer extends WebSocket.Server {
     }
 
     async publish(message) {
-        const ctx = createContext({
+        const ctx = new BroadcastContext({
             app: this,
             message,
             serialize,

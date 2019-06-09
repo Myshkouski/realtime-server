@@ -2,15 +2,37 @@
   "name": "@alexeimyshkouski/realtime-server",
   "version": "0.0.4",
   "description": "Realtime Server",
-  "main": "index.js",
+  "main": "dist/cjs/index",
   "author": "Alexei Myshkouski",
   "dependencies": {
-    "@alexeimyshkouski/ws": "^6.1.0-beta.1",
     "debug": "^4.0.1",
-    "koa-compose": "^4.1.0"
+    "koa-compose": "^4.1.0",
+    "tslib": "^1.9.3"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Myshkouski/realtime-server.git"
+  },
+  "devDependencies": {
+    "@alexeimyshkouski/ws": "^6.1.0-beta.1",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-decorators": "^7.4.4",
+    "@babel/preset-stage-2": "^7.0.0",
+    "@types/node": "^12.0.7",
+    "core-decorators": "^0.20.0",
+    "eslint": "^5.16.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "rollup": "^1.14.5",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-delete": "^1.0.0",
+    "rollup-plugin-typescript": "^1.0.1",
+    "typescript": "^3.5.1"
+  },
+  "scripts": {
+    "build": "rollup -c rollup.config.js"
   }
 }
